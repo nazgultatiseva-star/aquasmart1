@@ -1,454 +1,724 @@
-<!DOCTYPE html>
-<html lang="kk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AquaSmart - Суды бақылау және талдау жүйесі</title>
-    <!-- Chart.js кітапханасы -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #eaf7ff, #f5fbff); margin: 0; color: #17324d; }
-        .container { max-width: 1100px; margin: 25px auto; padding: 0 18px; }
-        .hero { background: linear-gradient(135deg, #0277bd, #00a6d6); color: #fff; border-radius: 24px; padding: 28px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 30px #087bb330; }
-        .badge { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; opacity: .9; }
-        .hero h1 { margin: 8px 0; font-size: 30px; }
-        .hero p { margin: 0; opacity: .9; }
-        .hero-drop { font-size: 78px; }
-        
-        .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
-        .tab { border: 0; background: #fff; padding: 11px 16px; border-radius: 12px; cursor: pointer; color: #156082; font-weight: 700; box-shadow: 0 3px 12px #164b6615; }
-        .tab.active, .tab:hover { background: #0288d1; color: #fff; }
-        
-        .section { display: none; background: #fff; border-radius: 20px; padding: 25px; box-shadow: 0 6px 24px #164b6612; }
-        .section.active { display: block; }
-        .section h2 { margin-top: 0; color: #0277bd; }
-        
-        .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-        .stat { padding: 18px; border-radius: 16px; background: #f2faff; border: 1px solid #d7effb; }
-        .stat span, .stat small { display: block; color: #607d8b; }
-        .stat b { display: block; font-size: 25px; margin: 8px 0; color: #026c9d; }
-        
-        .chart-card, .panel, .ai-box, .ai-response, .leaderboard { margin-top: 18px; padding: 20px; border: 1px solid #e0edf3; border-radius: 16px; }
-        .chart-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .chart-head h3 { margin: 0; }
-        .chart-head button { border: 0; background: #f0f7fc; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .warning { background: #fff7dc; padding: 14px; border-radius: 10px; color: #785b00; }
-        .progress { height: 10px; background: #e6eef2; border-radius: 8px; margin: 14px 0; }
-        .progress span { display: block; height: 100%; background: #26a69a; border-radius: 8px; }
-        .forecast { font-size: 34px; font-weight: 800; color: #0288d1; }
-        
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .field label { display: block; font-weight: 700; margin-bottom: 7px; }
-        .field input, .chat input { width: 100%; padding: 13px; border: 1px solid #cbdce5; border-radius: 10px; font-size: 15px; }
-        .main-btn { width: 100%; margin-top: 18px; padding: 14px; border: 0; border-radius: 12px; background: #2e7d32; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer; }
-        
-        .result { margin-top: 20px; padding: 20px; background: #eefaf0; border-radius: 16px; }
-        .hidden { display: none; }
-        .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .result-grid div { background: #fff; padding: 16px; border-radius: 12px; }
-        .result-grid span { display: block; color: #607d8b; }
-        .result-grid strong { display: block; font-size: 23px; margin-top: 7px; color: #2e7d32; }
-        
-        .ai-box { display: flex; gap: 16px; align-items: center; background: #f0f9ff; }
-        .ai-avatar { font-size: 48px; }
-        .quick { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-        .quick button { border: 0; padding: 12px 15px; border-radius: 10px; background: #e5f5fc; color: #006a96; font-weight: 700; cursor: pointer; }
-        .ai-response { background: #f7fbff; min-height: 90px; }
-        .chat { display: flex; gap: 10px; margin-top: 16px; }
-        .chat button { border: 0; background: #0277bd; color: #fff; padding: 0 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-        
-        .eco { display: flex; align-items: center; gap: 25px; background: #effaf2; padding: 22px; border-radius: 18px; }
-        .circle { width: 130px; height: 130px; border-radius: 50%; background: conic-gradient(#2e9b54 0 82%, #dcefe2 82%); display: flex; align-items: center; justify-content: center; flex-direction: column; font-size: 34px; font-weight: 800; color: #24733e; }
-        .circle small { font-size: 14px; }
-        .goals { display: grid; gap: 10px; margin-top: 18px; }
-        .goal { padding: 15px; background: #f8fbfc; border-radius: 12px; border: 1px solid #e3edf1; display: flex; justify-content: space-between; }
-        .goal b { color: #2e7d32; }
-        .leaderboard p { margin: 10px 0; padding: 10px; background: #f6fafc; border-radius: 9px; }
-        
-        .where-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .where-card { padding: 20px; background: #f7fbfd; border: 1px solid #dfedf2; border-radius: 16px; }
-        .big-icon { font-size: 38px; }
-        .where-bar { height: 13px; background: #e6eef2; border-radius: 10px; margin: 12px 0; }
-        .where-bar span { display: block; height: 100%; background: #0288d1; border-radius: 10px; }
-        .where-card b { color: #0277bd; }
-        .tip-box { margin-top: 18px; padding: 17px; background: #fff8df; border-radius: 13px; color: #675000; }
-        
-        .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-        .scenario { padding: 20px; border: 1px solid #dcecf3; border-radius: 16px; background: #f8fcfe; }
-        .scenario input { width: 100%; margin: 20px 0; }
-        .scenario-result { padding: 14px; background: #fff; border-radius: 10px; }
-        .scenario-result strong { color: #2e7d32; }
-        .simulation-total { margin-top: 18px; padding: 22px; background: #eaf8ef; border-radius: 16px; font-size: 20px; }
-        .simulation-total strong { color: #2e7d32; }
-        
-        .school-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .school-result { text-align: center; margin-top: 20px; padding: 25px; background: #effaf2; border-radius: 18px; }
-        .school-number { font-size: 42px; font-weight: 900; color: #2e7d32; }
-        .school-number.small { font-size: 32px; }
-        .school-message { margin-top: 15px; padding: 14px; background: #fff; border-radius: 10px; }
-        
-        footer { text-align: center; padding: 25px; color: #607d8b; }
+<!DOCTYPE html> 
+<html lang="kk"> 
+<head> 
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<title>Жоғалған атаулар | Атырау тарихи топонимдері</title> 
+<style> 
+/* ========================= НЕГІЗГІ БАПТАУЛАР ========================= */ 
+* { margin: 0; padding: 0; box-sizing: border-box; } 
+html { scroll-behavior: smooth; } 
+body { font-family: Arial, sans-serif; background: #f5f8f7; color: #18332f; } 
 
-        @media(max-width:800px) {
-            .cards { grid-template-columns: 1fr 1fr; }
-            .grid2, .form-grid, .where-grid, .scenario-grid, .school-form { grid-template-columns: 1fr; }
-            .result-grid { grid-template-columns: 1fr; }
-            .hero-drop { display: none; }
-        }
-        @media(max-width:500px) {
-            .cards { grid-template-columns: 1fr; }
-            .hero h1 { font-size: 23px; }
-            .section { padding: 18px; }
-        }
-    </style>
-</head>
+/* ========================= HEADER ========================= */ 
+header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #dce8e5; } 
+.navbar { max-width: 1200px; margin: auto; padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; } 
+.logo { font-size: 20px; font-weight: bold; color: #0c6b5c; } 
+.logo span { display: block; font-size: 11px; color: #6a817c; margin-top: 3px; } 
+nav { display: flex; gap: 20px; } 
+nav a { text-decoration: none; color: #274a44; font-size: 14px; font-weight: 600; } 
+nav a:hover { color: #0c8b76; } 
 
-<body>
-<div class="container">
-    <div class="hero">
-        <div>
-            <div class="badge">💧 AQUASMART 2.0</div>
-            <h1>Әр тамшыны есепте — болашақты сақта!</h1>
-            <p>Дерек + Есептеу + ЖИ талдауы + Болжам + Эко-бақылау</p>
-        </div>
-        <div class="hero-drop">💧</div>
-    </div>
+/* ========================= HERO ========================= */ 
+.hero { min-height: 650px; display: flex; align-items: center; position: relative; overflow: hidden; background: linear-gradient( rgba(6,54,48,0.78), rgba(8,91,78,0.72) ), linear-gradient(135deg, #0c6b5c, #2c9684); } 
+.hero-content { max-width: 1200px; margin: auto; padding: 70px 25px; color: white; position: relative; z-index: 2; } 
+.badge { display: inline-block; padding: 8px 15px; border: 1px solid rgba(255,255,255,0.5); border-radius: 30px; margin-bottom: 20px; font-size: 13px; } 
+.hero h1 { max-width: 850px; font-size: clamp(40px, 7vw, 78px); line-height: 0.98; margin-bottom: 25px; } 
+.hero p { max-width: 720px; font-size: 19px; line-height: 1.7; color: #e6f6f2; } 
+.hero-buttons { display: flex; gap: 15px; margin-top: 35px; flex-wrap: wrap; } 
+.btn { display: inline-block; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; } 
+.btn-primary { background: white; color: #0c6b5c; } 
+.btn-secondary { border: 1px solid rgba(255,255,255,0.6); color: white; background: transparent; } 
 
-    <div class="tabs">
-        <button class="tab active" onclick="showSection('dashboard',this)">📊 Дашборд</button>
-        <button class="tab" onclick="showSection('calculator',this)">🧮 Калькулятор</button>
-        <button class="tab" onclick="showSection('ai',this)">🤖 AquaAI</button>
-        <button class="tab" onclick="showSection('goals',this)">🌱 Eco Score</button>
-        <button class="tab" onclick="showSection('where',this)">💧 Су қайда кетеді?</button>
-        <button class="tab" onclick="showSection('simulate',this)">🔮 Егер мен...</button>
-        <button class="tab" onclick="showSection('school',this)">🏫 Мектебіміз</button>
-    </div>
+/* ========================= SECTION ========================= */ 
+section { padding: 90px 20px; } 
+.container { max-width: 1200px; margin: auto; } 
+.section-title { text-align: center; margin-bottom: 50px; } 
+.section-title small { color: #0c8b76; font-weight: bold; text-transform: uppercase; } 
+.section-title h2 { font-size: 38px; margin-top: 10px; } 
 
-    <section id="dashboard" class="section active">
-        <h2>📊 Су тұтыну дашборды</h2>
-        <div class="cards">
-            <div class="stat"><span>💧 Бүгін</span><b>142 л</b><small>мақсат: 160 л</small></div>
-            <div class="stat"><span>📅 Осы ай</span><b id="monthLiters">3 200 л</b><small>өткен айға қарағанда −8%</small></div>
-            <div class="stat"><span>💰 Үнем</span><b id="moneySave">384 ₸</b><small>айлық болжам</small></div>
-            <div class="stat"><span>🌱 Eco Score</span><b id="scoreTop">82/100</b><small>Жақсы нәтиже!</small></div>
-        </div>
+/* ========================= STATS ========================= */ 
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; margin-top: -70px; position: relative; z-index: 5; } 
+.stat { background: white; padding: 30px; border-radius: 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); text-align: center; } 
+.stat strong { display: block; font-size: 35px; color: #0c806e; } 
+.stat span { color: #6d817d; } 
 
-        <div class="chart-card">
-            <div class="chart-head">
-                <h3>Су тұтыну динамикасы</h3>
-                <div>
-                    <button onclick="updateChart('daily')">Күн</button>
-                    <button onclick="updateChart('weekly')">Апта</button>
-                    <button onclick="updateChart('monthly')">Ай</button>
-                </div>
-            </div>
-            <canvas id="waterChart"></canvas>
-        </div>
+/* ========================= SEARCH ========================= */ 
+.search-box { max-width: 650px; margin: 0 auto 35px; position: relative; } 
+.search-box input { width: 100%; padding: 17px 20px; border: 1px solid #d4e3df; border-radius: 14px; font-size: 16px; outline: none; } 
+.search-box input:focus { border-color: #0c8b76; } 
 
-        <div class="grid2">
-            <div class="panel">
-                <h3>🚨 Ақылды бақылау</h3>
-                <div class="warning">⚠️ Түнгі уақытта су шығыны әдеттегіден 24% жоғары.</div>
-                <p>Құбыр немесе краннан су ағуын тексеріңіз.</p>
-                <div class="progress"><span style="width:76%"></span></div>
-                <small>Қалыпты тұтыну деңгейі: 76%</small>
-            </div>
-            <div class="panel">
-                <h3>🔮 Келесі айға болжам</h3>
-                <div class="forecast">≈ 3 050 л</div>
-                <p>Қазіргі үнемдеу қарқыны сақталса, келесі айда шамамен 150 л аз су жұмсауыңыз мүмкін.</p>
-            </div>
-        </div>
-    </section>
+/* ========================= CARDS ========================= */ 
+.cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 25px; } 
+.card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.07); transition: 0.3s; } 
+.card:hover { transform: translateY(-6px); } 
+.card-image { height: 180px; background: linear-gradient(135deg,#0d7767,#70b8aa); display: flex; align-items: center; justify-content: center; color: white; font-size: 55px; background-size: cover; background-position: center; } 
+.card-body { padding: 25px; } 
+.tag { display: inline-block; background: #e4f4f0; color: #087361; padding: 6px 10px; border-radius: 20px; font-size: 11px; margin-bottom: 12px; } 
+.card h3 { font-size: 23px; margin-bottom: 8px; } 
+.card p { color: #667873; line-height: 1.6; font-size: 14px; } 
+.more-btn { margin-top: 18px; background: #0c806e; color: white; border: none; padding: 11px 16px; border-radius: 9px; cursor: pointer; } 
 
-    <section id="calculator" class="section">
-        <h2>🧮 Жеке су шығынын есептеу</h2>
-        <div class="form-grid">
-            <div class="field"><label>🚿 Душ (мин/күн)</label><input id="shower" type="number" value="15" min="0"></div>
-            <div class="field"><label>🚰 Кран (мин/күн)</label><input id="faucet" type="number" value="20" min="0"></div>
-            <div class="field"><label>🧺 Кір жуу (рет/апта)</label><input id="washing" type="number" value="5" min="0"></div>
-            <div class="field"><label>👨‍👩‍👧‍👦 Отбасы мүшелері</label><input id="family" type="number" value="4" min="1"></div>
-        </div>
-        <button class="main-btn" onclick="calculate()">✨ Есептеу және ЖИ талдауын алу</button>
+/* ========================= MAP ========================= */ 
+.map-section { background: #eaf4f1; } 
+.map { height: 550px; border-radius: 25px; background: radial-gradient(circle at 20% 30%, #79b5a8 2px, transparent 3px), radial-gradient(circle at 60% 50%, #79b5a8 2px, transparent 3px), linear-gradient(135deg,#dcece8,#b7d7cf); background-size: 60px 60px, 80px 80px, auto; position: relative; overflow: hidden; border: 8px solid white; box-shadow: 0 15px 40px rgba(0,0,0,0.1); } 
+.map-title { position: absolute; top: 20px; left: 25px; background: white; padding: 14px 18px; border-radius: 12px; font-weight: bold; } 
+.marker { position: absolute; width: 22px; height: 22px; border-radius: 50% 50% 50% 0; background: #d96b35; transform: rotate(-45deg); cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25); } 
+.marker span { transform: rotate(45deg); display: block; font-size: 12px; color: white; text-align: center; margin-top: 4px; } 
+.marker:hover { transform: rotate(-45deg) scale(1.25); } 
 
-        <div id="calcResult" class="result hidden">
-            <div class="result-grid">
-                <div><span>Айлық шығын</span><strong id="totalWater">0 л</strong></div>
-                <div><span>Үнемдеу мүмкіндігі</span><strong id="savedWater">0 л</strong></div>
-                <div><span>Ақшалай үнем</span><strong id="savedMoney">0 ₸</strong></div>
-            </div>
-            <div id="recommendations"></div>
-        </div>
-    </section>
+/* ========================= BEFORE / AFTER ========================= */ 
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; } 
+.compare-box { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.07); } 
+.compare-img { height: 300px; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 55px; color: white; } 
+.compare-content { padding: 25px; } 
+.compare-content h3 { font-size: 28px; } 
 
-    <section id="ai" class="section">
-        <h2>🤖 AquaAI — ақылды су кеңесшісі</h2>
-        <div class="ai-box">
-            <div class="ai-avatar">🤖</div>
-            <div>
-                <h3>AquaAI дайын!</h3>
-                <p>Сіздің су тұтыну әдеттеріңізді талдап, үнемдеу жолдарын ұсына аламын.</p>
-            </div>
-        </div>
+/* ========================= AI ========================= */ 
+.ai-section { background: #102e2a; color: white; } 
+.ai-box { max-width: 850px; margin: auto; background: #173d37; border: 1px solid #2c5c54; border-radius: 25px; padding: 35px; } 
+.ai-header { display: flex; gap: 15px; align-items: center; margin-bottom: 25px; } 
+.ai-icon { width: 50px; height: 50px; background: #56b9a6; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 25px; } 
+.ai-input { display: flex; gap: 10px; } 
+.ai-input input { flex: 1; padding: 15px; border-radius: 10px; border: none; font-size: 15px; } 
+.ai-input button { padding: 15px 20px; background: #58b9a7; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; } 
+.ai-answer { margin-top: 20px; padding: 20px; background: #102e2a; border-radius: 12px; line-height: 1.7; display: none; } 
 
-        <div class="quick">
-            <button onclick="aiAnswer('analysis')">📈 Менің тұтынуымды талда</button>
-            <button onclick="aiAnswer('saving')">💧 Қалай көбірек үнемдеймін?</button>
-            <button onclick="aiAnswer('leak')">🚨 Ағып кету бар ма?</button>
-            <button onclick="aiAnswer('forecast')">🔮 Болжам жаса</button>
-        </div>
-        <div id="aiResponse" class="ai-response">
-            <h3>💡 AquaAI ұсынысы</h3>
-            <p>Жоғарыдағы батырмалардың бірін таңдаңыз.</p>
-        </div>
+/* ========================= QUIZ ========================= */ 
+.quiz { max-width: 750px; margin: auto; background: white; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.07); } 
+.quiz-question { font-size: 20px; font-weight: bold; margin-bottom: 20px; line-height: 1.5; } 
+.option { width: 100%; text-align: left; padding: 15px; margin: 8px 0; border: 1px solid #dbe7e4; border-radius: 10px; background: white; cursor: pointer; font-size: 15px; transition: 0.2s; } 
+.option:hover { background: #eef8f5; } 
+#quiz-result { margin-top: 20px; font-weight: bold; } 
 
-        <div class="chat">
-            <input id="question" placeholder="Мысалы: «Айына қанша литр үнемдей аламын?»">
-            <button onclick="askAI()">Жіберу</button>
-        </div>
-    </section>
+/* ========================= SOURCES ========================= */ 
+.sources { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; } 
+.source { background: white; padding: 25px; border-radius: 18px; border-left: 4px solid #0c806e; } 
+.source h3 { margin-bottom: 10px; } 
+.source p { color: #667873; line-height: 1.5; } 
 
-    <section id="goals" class="section">
-        <h2>🌱 Eco Score және мақсаттар</h2>
-        <div class="eco">
-            <div class="circle"><span id="ecoNumber">82</span><small>/100</small></div>
-            <div>
-                <h3>Сіздің экологиялық деңгейіңіз: Жақсы</h3>
-                <p>90 баллға жету үшін кранды қажетсіз ашық қалдырмаңыз және душ уақытын қысқартыңыз.</p>
-            </div>
-        </div>
+/* ========================= MODAL ========================= */ 
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2000; align-items: center; justify-content: center; padding: 20px; } 
+.modal-content { max-width: 750px; width: 100%; max-height: 90vh; overflow-y: auto; background: white; border-radius: 22px; padding: 35px; position: relative; } 
+.close { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; } 
+.modal-content h2 { color: #0c806e; margin-bottom: 20px; } 
+.modal-content p { line-height: 1.8; color: #536863; margin-bottom: 15px; } 
+.modal-img-container { display: flex; gap: 15px; margin: 15px 0; }
+.modal-img-container img { width: 50%; border-radius: 12px; height: 180px; object-fit: cover; }
 
-        <div class="goals">
-            <div class="goal done">✅ 100 литр су үнемдеу <b>Орындалды</b></div>
-            <div class="goal">🚿 Душ уақытын 10 минутқа түсіру <b>+5 балл</b></div>
-            <div class="goal">🚰 Кранды босқа ашық қалдырмау <b>+4 балл</b></div>
-            <div class="goal">🏆 1 ай бойы эко-режим сақтау <b>+10 балл</b></div>
-        </div>
+/* ========================= FOOTER ========================= */ 
+footer { background: #09221f; color: white; text-align: center; padding: 40px 20px; } 
+footer p { color: #a9c3bd; margin-top: 8px; } 
 
-        <div class="leaderboard">
-            <h3>🏆 Эко-рейтинг</h3>
-            <p>🥇 7А сыныбы — 8 420 л үнемдеді</p>
-            <p>🥈 7Б сыныбы — 7 950 л үнемдеді</p>
-            <p>🥉 8А сыныбы — 7 420 л үнемдеді</p>
-        </div>
-    </section>
+/* ========================= RESPONSIVE ========================= */ 
+@media(max-width:900px) { nav { display: none; } .stats { grid-template-columns: repeat(2,1fr); } .cards, .sources { grid-template-columns: 1fr 1fr; } } 
+@media(max-width:600px) { .stats, .cards, .sources, .compare { grid-template-columns: 1fr; } section { padding: 60px 15px; } .hero { min-height: 600px; } .hero h1 { font-size: 43px; } .ai-input { flex-direction: column; } .modal-img-container { flex-direction: column; } .modal-img-container img { width: 100%; } } 
+</style> 
+</head> 
+<body> 
 
-    <section id="where" class="section">
-        <h2>💧 Су қайда кетеді?</h2>
-        <p>Енгізілген деректер бойынша айлық су шығынының негізгі көздерін көріңіз.</p>
-        <div class="where-grid">
-            <div class="where-card">
-                <div class="big-icon">🚿</div><h3>Душ</h3>
-                <div class="where-bar"><span id="showerBar" style="width:45%"></span></div>
-                <b id="showerPct">45%</b>
-            </div>
-            <div class="where-card">
-                <div class="big-icon">🚰</div><h3>Кран</h3>
-                <div class="where-bar"><span id="faucetBar" style="width:25%"></span></div>
-                <b id="faucetPct">25%</b>
-            </div>
-            <div class="where-card">
-                <div class="big-icon">🧺</div><h3>Кір жуғыш</h3>
-                <div class="where-bar"><span id="washingBar" style="width:20%"></span></div>
-                <b id="washingPct">20%</b>
-            </div>
-            <div class="where-card">
-                <div class="big-icon">🏠</div><h3>Басқа</h3>
-                <div class="where-bar"><span id="otherBar" style="width:10%"></span></div>
-                <b id="otherPct">10%</b>
-            </div>
-        </div>
-        <div class="tip-box">💡 <b>Қорытынды:</b> ең үлкен көрсеткішке назар аударып, алдымен сол жерде үнемдеуді бастаңыз.</div>
-    </section>
+<!-- ========================= HEADER ========================= --> 
+<header> 
+<div class="navbar"> 
+<div class="logo"> 
+🏛 ЖОҒАЛҒАН АТАУЛАР <span>Атыраудың тарихи топонимдері</span> 
+</div> 
+<nav> 
+<a href="#home">Басты бет</a> 
+<a href="#map">Карта</a> 
+<a href="#names">Атаулар</a> 
+<a href="#compare">Уақыт салыстыруы</a>
+<a href="#ai">ЖИ</a> 
+<a href="#quiz">Ойын</a> 
+</nav> 
+</div> 
+</header> 
 
-    <section id="simulate" class="section">
-        <h2>🔮 «Егер мен...» симуляторы</h2>
-        <p>Күнделікті әдетіңізді өзгерткенде қанша су үнемдеуге болатынын есептеңіз.</p>
-        <div class="scenario-grid">
-            <div class="scenario">
-                <h3>🚿 Душ уақытын қысқарту</h3>
-                <label>Қазіргі уақыт: <b id="showerValue">15</b> минут</label>
-                <input type="range" id="showerRange" min="5" max="30" value="15" oninput="simulateShower(this.value)">
-                <div class="scenario-result">Үнем: <strong id="showerSave">1800 л/ай</strong></div>
-            </div>
-            <div class="scenario">
-                <h3>🚰 Кранды босқа ашық қалдырмау</h3>
-                <label>Күніне артық ашық уақыт: <b id="faucetValue">10</b> минут</label>
-                <input type="range" id="faucetRange" min="0" max="30" value="10" oninput="simulateFaucet(this.value)">
-                <div class="scenario-result">Үнем: <strong id="faucetSave">2700 л/ай</strong></div>
-            </div>
-        </div>
-        <div class="simulation-total">
-            💧 Жалпы ықтимал үнем: <strong id="simulationTotal">4500 л/ай</strong>
-            <p>🌱 Бұл әдеттерді тұрақты сақтасаңыз, жылына <strong id="yearSave">54 000 л</strong> су үнемдеуге болады.</p>
-        </div>
-    </section>
+<!-- ========================= HERO ========================= --> 
+<section class="hero" id="home"> 
+<div class="hero-content"> 
+<div class="badge"> ЦИФРЛЫҚ ТАРИХИ ЗЕРТТЕУ ЖОБАСЫ </div> 
+<h1> ЖОҒАЛҒАН<br> АТАУЛАР </h1> 
+<p> Атырау өңірінің тарихи жер-су атауларын жинақтау, зерттеу және жас ұрпаққа цифрлық форматта ұсыну. </p> 
+<div class="hero-buttons"> 
+<a href="#map" class="btn btn-primary"> 🗺 Картаны зерттеу </a> 
+<a href="#names" class="btn btn-secondary"> 📜 Атауларды көру </a> 
+</div> 
+</div> 
+</section> 
 
-    <section id="school" class="section">
-        <h2>🏫 «Егер бүкіл мектебіміз AquaSmart қолданса...»</h2>
-        <p>Мектеп оқушыларының ортақ су үнемдеу әлеуетін есептеңіз.</p>
-        <div class="school-form">
-            <div class="field">
-                <label>👩‍🎓 Оқушылар саны</label>
-                <input id="students" type="number" value="500" min="1">
-            </div>
-            <div class="field">
-                <label>💧 Бір оқушы күніне үнемдейтін су (л)</label>
-                <input id="perStudent" type="number" value="2" min="0">
-            </div>
-        </div>
-        <button class="main-btn" onclick="calculateSchool()">🏫 Мектеп нәтижесін есептеу</button>
-        <div id="schoolResult" class="school-result">
-            <div class="school-number" id="schoolLiters">30 000 л</div>
-            <p>💧 Мектеп бойынша айына үнемделетін су</p>
-            <div class="school-number small" id="schoolYear">360 000 л</div>
-            <p>🌱 Бір жылда үнемделетін су</p>
-            <div class="school-message">🏆 Кішкентай әдеттер бірігіп, үлкен нәтижеге әкеледі!</div>
-        </div>
-    </section>
+<!-- ========================= STATS ========================= --> 
+<div class="container"> 
+<div class="stats"> 
+<div class="stat"> 
+<strong>22</strong> <span>тарихи атау</span> 
+</div> 
+<div class="stat"> 
+<strong>9</strong> <span>өңірлік бағыт</span> 
+</div> 
+<div class="stat"> 
+<strong>6</strong> <span>топоним түрі</span> 
+</div> 
+<div class="stat"> 
+<strong>AI</strong> <span>цифрлық зерттеуші</span> 
+</div> 
+</div> 
+</div> 
 
-    <footer>
-        <b>AquaSmart</b> — суды үнемдеу мәдениетін қалыптастыратын цифрлық жүйе.
-        <br><small>Демонстрациялық нұсқа: AquaAI жауаптары локалды ережелер мен модельденген деректер арқылы көрсетіледі.</small>
-    </footer>
+<!-- ========================= MAP ========================= --> 
+<section class="map-section" id="map"> 
+<div class="container"> 
+<div class="section-title"> 
+<small>ЗЕРТТЕУ КАРТАСЫ</small> 
+<h2>Атыраудың тарихи картасы</h2> 
+</div> 
+<div class="map"> 
+<div class="map-title"> 📍 Тарихи жер-су атаулары </div> 
+<div class="marker" style="left:30%;top:40%; background:#0284c7;" onclick="showPlace('Жайық')"> <span>1</span> </div> 
+<div class="marker" style="left:48%;top:30%; background:#d97706;" onclick="showPlace('Сарайшық')"> <span>2</span> </div> 
+<div class="marker" style="left:65%;top:55%; background:#d97706;" onclick="showPlace('Доссор')"> <span>3</span> </div> 
+<div class="marker" style="left:75%;top:35%; background:#6366f1;" onclick="showPlace('Мақат')"> <span>4</span> </div> 
+<div class="marker" style="left:42%;top:70%; background:#f59e0b;" onclick="showPlace('Құлсары')"> <span>5</span> </div> 
+<div class="marker" style="left:82%;top:68%; background:#e63946;" onclick="showPlace('Аралтөбе')"> <span>6</span> </div> 
+<div class="marker" style="left:38%;top:28%; background:#2a9d8f;" onclick="showPlace('Бақсай')"> <span>7</span> </div> 
+<div class="marker" style="left:58%;top:78%; background:#0284c7;" onclick="showPlace('Ембі')"> <span>8</span> </div> 
+<div class="marker" style="left:25%;top:20%; background:#8b5cf6;" onclick="showPlace('Индер')"> <span>9</span> </div>
+<div class="marker" style="left:80%;top:25%; background:#ec4899;" onclick="showPlace('Қаракөл')"> <span>10</span> </div>
+<div class="marker" style="left:15%;top:65%; background:#10b981;" onclick="showPlace('Қиғаш')"> <span>11</span> </div>
+<div class="marker" style="left:70%;top:20%; background:#e11d48;" onclick="showPlace('Қызылқоға')"> <span>12</span> </div>
+<div class="marker" style="left:65%;top:18%; background:#0284c7;" onclick="showPlace('Ойыл')"> <span>13</span> </div>
+<div class="marker" style="left:78%;top:32%; background:#14b8a6;" onclick="showPlace('Сағыз')"> <span>14</span> </div>
+<div class="marker" style="left:72%;top:15%; background:#84cc16;" onclick="showPlace('Тайсойған')"> <span>15</span> </div>
+</div> 
+</div> 
+</section> 
+
+<!-- ========================= NAMES ========================= --> 
+<section id="names"> 
+<div class="container"> 
+<div class="section-title"> 
+<small>ТОПОНИМДЕР</small> 
+<h2>Тарихи атаулар</h2> 
+</div> 
+<div class="search-box"> 
+<input type="text" id="search" placeholder="🔎 Атауды іздеу..." onkeyup="searchNames()"> 
+</div> 
+<div class="cards" id="cards"> 
+<div class="card" data-name="Тайсойған құмы полигон Қызылқоға Ойыл жайылым"> 
+<div class="card-image" style="background-image: url('тойсойған\ қазір.jpeg');"></div> 
+<div class="card-body"> 
+<span class="tag"> ДЮНОНИМ / ҚҰМДЫ АЛҚАП </span> 
+<h3>Тайсойған</h3> 
+<p> <b>Тарихи атауы:</b> Тайсойған құмы </p> 
+<p> Батыс Қазақстандағы ең ірі құмды алқап, әскери полигон тарихы бар шұрайлы мал жайылымы. </p> 
+<button class="more-btn" onclick="showPlace('Тайсойған')"> Толығырақ → </button> 
+</div> 
+</div>
+<div class="card" data-name="Сарайшық Күшік-Сарай Сар-Уч Сарай-Джук Кіші Сарай Махамбет хан пантеон Алтын Орда Қасым хан"> 
+<div class="card-image" style="background-image: url('сарайшық\ бүгін.webp');"></div> 
+<div class="card-body"> 
+<span class="tag"> ОЙКОНИМ / ТАРИХИ ҚАЛА ОРНЫ </span> 
+<h3>Сарайшық</h3> 
+<p> <b>Тарихи атауы:</b> Күшік-Сарай / Сар-Уч / Кіші Сарай </p> 
+<p> Алтын Орда, Ноғай Ордасы және Қазақ хандығының ірі орталығы, хандар пантеоны. </p> 
+<button class="more-btn" onclick="showPlace('Сарайшық')"> Толығырақ → </button> 
+</div> 
+</div> 
+<div class="card" data-name="Сағыз Сагиз теміржол станция өзен кент Қызылқоға"> 
+<div class="card-image" style="background-image: url('сағыз\ қазір.jpg');"></div> 
+<div class="card-body"> 
+<span class="tag"> ГИДРОНИМ / ОЙКОНИМ </span> 
+<h3>Сағыз</h3> 
+<p> <b>Тарихи атауы:</b> Сагиз </p> 
+<p> Мұғалжар бөктерінен басталатын өзен, тарихи теміржол станциясы және маңызды көлік торабы. </p> 
+<button class="more-btn" onclick="showPlace('Сағыз')"> Толығырақ → </button> 
+</div> 
+</div>
+<div class="card" data-name="Ойыл Уил Көкжар жәрмеңке өзен Тайсойған Қызылқоға"> 
+<div class="card-image" style="background-image: url('ойыл\ қазір.jpg');"></div> 
+<div class="card-body"> 
+<span class="tag"> ГИДРОНИМ (ӨЗЕН АТАУЫ) </span> 
+<h3>Ойыл (Көкжар)</h3> 
+<p> <b>Тарихи атауы:</b> Уил / Көкжар </p> 
+<p> Ұлы Жібек жолының тармағында орналасқан, Көкжар жәрмеңкесімен танымал Батыс Қазақстанның ең көне өзендерінің бірі. </p> 
+<button class="more-btn" onclick="showPlace('Ойыл')"> Толығырақ → </button> 
+</div> 
+</div> 
+<div class="card" data-name="Мақат Макат мұнай теміржол станция кент"> 
+<div class="card-image" style="background-image: url('макат\ казір.jpg');"></div> 
+<div class="card-body"> 
+<span class="tag"> ОЙКОНИМ / КЕНТ </span> 
+<h3>Мақат</h3> 
+<p> <b>Тарихи атауы:</b> Мақат </p> 
+<p> Мұнай өндірісі мен теміржол торабының тарихында ерекше орны бар, Мақат есімді тұлғаның атымен аталған өлке. </p> 
+<button class="more-btn" onclick="showPlace('Мақат')"> Толығырақ → </button> 
+</div> 
+</div> 
+<div class="card" data-name="Қызылқоға Миялы Ойыл Сағыз Тайсойған қоға мал аудан"> 
+<div class="card-image" style="background-image: url('қызылқоға\ қазір.jpg');"></div> 
+<div class="card-body"> 
+<span class="tag"> ОЙКОНИМ / АУДАН </span> 
+<h3>Қызылқоға</h3> 
+<p> <b>Тарихи атауы:</b> Қызылқоға </p> 
+<p> Ойыл мен Сағыз өзендері бойындағы шұрайлы, өнер мен мал шаруашылығы дамыған құтты мекен. </p> 
+<button class="more-btn" onclick="showPlace('Қызылқоға')"> Толығырақ → </button> 
+</div> 
+</div> 
+<div class="card" data-name="Құлсары Күлсары Жылыой Теңіз батыр мұнай қала"> 
+<div class="card-image" style="background-image: url('құлсары\ қазір.jpg');"></div> 
+<div class="card-body"> 
+<span class="tag"> ОЙКОНИМ / ҚАЛА </span> 
+<h3>Құлсары</h3> 
+<p> <b>Тарихи атауы:</b> Күлсары / Құлсары </p> 
+<p> Жылыой ауданының орталығы, Құлсары батыр есімімен аталған мұнайлы өңір орталығы. </p> 
+<button class="more-btn" onclick="showPlace('Құлсары')"> Толығырақ → </button> 
+</div> 
+</div> 
+</div> 
+</div> 
+</section> 
+
+<!-- ========================= BEFORE AFTER ========================= --> 
+<section id="compare" style="background:#edf5f3;"> 
+<div class="container"> 
+<div class="section-title"> 
+<small>УАҚЫТ САЛЫСТЫРУЫ</small> 
+<h2>Тайсойған өңірінің тарихи ескерткіштері мен бүгінгі көрінісі</h2> 
+</div> 
+<div class="compare"> 
+<div class="compare-box"> 
+<div class="compare-img" style="background-image: url('тайсойған\ бұрынғы.jpg');"></div> 
+<div class="compare-content"> 
+<span class="tag"> ТАРИХИ ЖАДІГЕРЛЕР ЖӘНЕ ЭКСПЕДИЦИЯ </span> 
+<h3>Тайсойғандағы көне қорымдар мен зерттеулер</h3> 
+<p> Құмды алқаптағы тарихи мазарлар мен полигон кезеңіндегі археологиялық ізденіс жұмыстары. </p> 
+</div> 
+</div> 
+<div class="compare-box"> 
+<div class="compare-img" style="background-image: url('тойсойған\ қазір.jpeg');"></div> 
+<div class="compare-content"> 
+<span class="tag"> ҚАЗІРГІ НЕЛІК ЖӘНЕ ЕЛДІ МЕКЕНДЕР </span> 
+<h3>Қайтарылған жерлер мен қазіргі Тайсойған</h3> 
+<p> Ел игілігіне қайтарылған, мал шаруашылығы қарқынды дамып келе жатқан елді мекен көрінісі. </p> 
+</div> 
+</div> 
+</div> 
+</div> 
+</section> 
+
+<!-- ========================= AI ========================= --> 
+<section class="ai-section" id="ai"> 
+<div class="container"> 
+<div class="section-title"> 
+<small style="color:#74d5c2;"> ЖАСАНДЫ ИНТЕЛЛЕКТ </small> 
+<h2>🤖 ЖИ Топоним зерттеуші</h2> 
+</div> 
+<div class="ai-box"> 
+<div class="ai-header"> 
+<div class="ai-icon"> 🤖 </div> 
+<div> 
+<h3>Тарихи атау туралы сұраңыз</h3> 
+<p> Зерттеу базасындағы мәліметтер негізінде ақпаратты түсіндіреді. </p> 
+</div> 
+</div> 
+<div class="ai-input"> 
+<input id="aiQuestion" placeholder="Мысалы: Тайсойған, Сарайшық, Сағыз немесе Ойыл туралы айтып беріңіз"> 
+<button onclick="askAI()"> Сұрау </button> 
+</div> 
+<div class="ai-answer" id="aiAnswer"></div> 
+</div> 
+</div> 
+</section> 
+
+<!-- ========================= QUIZ (5 СҰРАҚ) ========================= --> 
+<section id="quiz"> 
+  <div class="container"> 
+    <div class="section-title"> 
+      <small>ИНТЕРАКТИВТІ ОЙЫН</small> 
+      <h2>🧩 Біліміңді тексер</h2> 
+    </div> 
+    
+    <div class="quiz" id="quiz-container"> 
+      <div id="quiz-progress" style="margin-bottom: 15px; font-weight: bold; color: #0c806e;"> 
+        Сұрақ: <span id="current-question">1</span> / 5 
+      </div> 
+      
+      <div class="quiz-question" id="question-text">
+        1949 жылы КСРО Қорғаныс министрлігіне әскери полигон ретінде жалға беріліп, 2015 жылы елге қайтарылған құмды алқап қайсысы?[cite: 44]
+      </div> 
+      
+      <div id="options-container">
+        <!-- Жауаптар скрипт арқылы жүктеледі -->
+      </div> 
+      
+      <div id="quiz-result" style="margin-top: 20px; font-weight: bold;"></div> 
+      
+      <button id="next-btn" onclick="nextQuestion()" style="display: none; margin-top: 20px; background: #0c806e; color: white; border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold;">
+        Келесі сұрақ →
+      </button>
+    </div> 
+  </div> 
+</section>
+
+<!-- ========================= SOURCES ========================= --> 
+<section style="background:#edf5f3;"> 
+<div class="container"> 
+<div class="section-title"> 
+<small>ҒЫЛЫМИ НЕГІЗ</small> 
+<h2>📚 Дереккөздер</h2> 
+</div> 
+<div class="sources"> 
+<div class="source"> 
+<h3>📖 Тарихи жазбалар & Энциклопедиялар</h3> 
+<p> Қазақстан Ұлттық Энциклопедиясы («Тайсойған құмы» бөлімі), Ибн Баттута «Саяхатнама»[cite: 41, 44]. </p> 
+</div> 
+<div class="source"> 
+<h3>📜 Өлкетану & Археология</h3> 
+<p> Қызылқоға ауданының географиялық анықтамалығы, Атырау облыстық тарихи-өлкетану музейінің мұрағаттық деректері[cite: 44]. </p> 
+</div> 
+<div class="source"> 
+<h3>🌐 Цифрлық деректер</h3> 
+<p> Атырау облысының топонимикалық сөздігі және ресми геопортал мәліметтері[cite: 44]. </p> 
+</div> 
+</div> 
+</div> 
+</section> 
+
+<!-- ========================= MODAL ========================= --> 
+<div class="modal" id="modal"> 
+<div class="modal-content"> 
+<div class="close" onclick="closeModal()"> × </div> 
+<div id="modalText"></div> 
+</div> 
+</div> 
+
+<!-- ========================= FOOTER ========================= --> 
+<footer> 
+<h3>ЖОҒАЛҒАН АТАУЛАР</h3> 
+<p> Атырау өңірінің тарихи топонимдерін цифрлық түрде сақтау жобасы </p> 
+<p style="margin-top:20px;"> © 2026 | Зерттеу жобасы </p> 
+</footer> 
+
+<script> 
+/* ========================= ТАРИХИ ДЕРЕКТЕР ========================= */ 
+const places = { 
+"Тайсойған": { 
+title: "Тайсойған", 
+oldName: "Тайсойған құмы", 
+type: "Дюноним / Аймақ, құмды алқап", 
+text: ` 
+<p><b>Қазіргі атауы:</b> Тайсойған[cite: 44]</p> 
+<p><b>Тарихи атауы:</b> Тайсойған құмы[cite: 44]</p> 
+<p><b>Орналасқан жері:</b> Атырау облысы, Қызылқоға ауданы[cite: 44]</p> 
+<p><b>Координаттары:</b> 48°34′05″ с. е. 53°26′51″ ш. б.[cite: 44]</p> 
+
+<div class="modal-img-container">
+    <img src="тайсойған бұрынғы.jpg" alt="Тайсойғандағы зерттеулер">
+    <img src="тойсойған қазір.jpeg" alt="Тайсойған ауылы қазір">
 </div>
 
-<script>
-const dataSets = {
-    daily:{labels:['Дүй','Сей','Сәр','Бей','Жұма','Сен','Жек'],data:[150,120,180,140,110,200,190],label:'Күнделікті тұтыну (л)'},
-    weekly:{labels:['1-апта','2-апта','3-апта','4-апта'],data:[1050,980,1120,890],label:'Апталық тұтыну (л)'},
-    monthly:{labels:['Қаң','Ақп','Нау','Сәу','Мам','Маус'],data:[4200,3900,4100,3800,3500,3200],label:'Айлық тұтыну (л)'}
-};
+<p><b>Тарихы:</b><br>
+Тайсойған — Батыс Қазақстан өңіріндегі ең ірі құмды алқаптардың бірі[cite: 44]. Ойыл өзенінің төменгі ағысы мен Каспий маңы ойпаты шегінде орналасқан[cite: 44]. Тарихи тұрғыдан бұл аймақ ежелден мал шаруашылығына өте қолайлы, шөбі шүйгін, тұщы сулы құдықтары мол құтты мекен саналған[cite: 44].<br>
+Кеңес өкіметі тұсында, 1949 жылы Тайсойған құмының басым бөлігі (300 мың гектардан астам жер) КСРО Қорғаныс министрлігінің әскери полигоны ретінде жалға берілді[cite: 44]. Бұл жерде ондаған жылдар бойы әскери сынақтар жүргізіліп, өңірдің экологиясы мен жергілікті халықтың тұрмысына үлкен әсер етті[cite: 44]. 2015 жылы жүргізілген келіссөздер нәтижесінде Тайсойған полигонының жерлері Қазақстан Республикасының меншігіне толық қайтарылды[cite: 44].</p> 
 
-const ctx = document.getElementById('waterChart').getContext('2d');
-let waterChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: dataSets.daily.labels,
-        datasets: [{
-            label: dataSets.daily.label,
-            data: dataSets.daily.data,
-            backgroundColor: 'rgba(2,136,209,.15)',
-            borderColor: '#0288d1',
-            borderWidth: 3,
-            fill: true,
-            tension: .35,
-            pointRadius: 4
-        }]
-    },
-    options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } }
-});
+<p><b>Атаудың шығу төркіні:</b><br>
+Топонимнің пайда болуына байланысты халық арасында бірнеше нұсқа бар[cite: 44]. Негізгі топонимикалық уәждеме бойынша, ертеде ел басына күн туған заманда немесе үлкен ас/жиын берілгенде осы құмды алқапта құрбандыққа немесе қонақасыға «тай сойылған» оқиғасына байланысты «Тайсойған» деп аталған[cite: 44].</p> 
 
-function updateChart(period) {
-    waterChart.data.labels = dataSets[period].labels;
-    waterChart.data.datasets[0].data = dataSets[period].data;
-    waterChart.data.datasets[0].label = dataSets[period].label;
-    waterChart.update();
+<p><b>Аңыз мен деректер:</b><br>
+• <i>Шұрайлы құм аңызы:</i> Тұрғындар арасында Тайсойған құмының астында мол тұщы су қоры мен табиғи жайылымдар бар екені айтылады[cite: 44]. Құмды аймақ болғанына қарамастан, жер бетіне жақын орналасқан тұщы сулардың арқасында мұнда қалың шабындықтар мен ағаш-бұталар өседі[cite: 44].<br>
+• <i>Полигон жерлерін қайтару:</i> 2015 жылы Ресей Федерациясымен арадағы келісім бойынша 90 мың гектардан астам Тайсойған полигонының жері ауыл шаруашылығы айналымына қайтарылып, Қызылқоға ауданының шаруаларына жайылым ретінде берілді[cite: 44].</p>
+
+<p><b>Қазіргі жағдайы:</b><br>
+Бүгінгі таңда Тайсойған — Қызылқоға ауданындағы мал шаруашылығын (төрт түлік мал өсіруді) дамытудың басты базасы[cite: 44]. Полигон жабылғаннан кейін аймақта экологиялық оңалту және ауыл шаруашылығы жерлерін тиімді пайдалану жұмыстары қолға алынды[cite: 44].</p>
+` 
+},
+"Сарайшық": { 
+title: "Сарайшық", 
+oldName: "Күшік-Сарай / Сар-Уч / Сарай-Джук / Кіші Сарай", 
+type: "Ойконим / Тарихи қала орны", 
+text: ` 
+<p><b>Қазіргі атауы:</b> Сарайшық[cite: 41]</p> 
+<p><b>Тарихи атауы:</b> Күшік-Сарай / Сар-Уч / Кіші Сарай[cite: 41]</p> 
+<div class="modal-img-container">
+    <img src="сарайшық бұрынғы фото.jpg" alt="Сарайшық бұрын">
+    <img src="сарайшық бүгін.webp" alt="Сарайшық қазір">
+</div>
+<p>Сарайшық — XIII–XVI ғасырлардағы ірі тарихи шаһар[cite: 41].</p>
+` 
+},
+"Сағыз": { 
+title: "Сағыз", 
+oldName: "Сагиз", 
+type: "Гидроним / Ойконим", 
+text: ` 
+<p><b>Қазіргі атауы:</b> Сағыз</p> 
+<div class="modal-img-container">
+    <img src="Сағыз бұрын.webp" alt="Сағыз бұрын">
+    <img src="сағыз қазір.jpg" alt="Сағыз қазір">
+</div>
+<p>Мұғалжар тауларынан бастау алатын өзен[cite: 41].</p>
+` 
+},
+"Ойыл": { 
+title: "Ойыл (Көкжар)", 
+oldName: "Уил / Көкжар", 
+type: "Гидроним (өзен атауы)", 
+text: ` 
+<p><b>Қазіргі атауы:</b> Ойыл</p> 
+<div class="modal-img-container">
+    <img src="Ойыл Көкжар жірменкесі.jpg" alt="Көкжар жәрмеңкесі">
+    <img src="ойыл қазір.jpg" alt="Ойыл өзені">
+</div>
+<p>Ойыл — Батыс Қазақстанның ең көне өзендерінің бірі.</p> 
+` 
+},
+"Мақат": { 
+title: "Мақат", 
+oldName: "Мақат", 
+type: "Ойконим / Аудан орталығы", 
+text: `<p><b>Қазіргі атауы:</b> Мақат</p><p>Мақат — мұнайлы кент.</p>` 
+},
+"Қызылқоға": { 
+title: "Қызылқоға", 
+oldName: "Қызылқоға", 
+type: "Ойконим / Аудан атауы", 
+text: `<p><b>Қазіргі атауы:</b> Қызылқоға</p><p>Өнер мен мал шаруашылығы дамыған өлке[cite: 41].</p>` 
+},
+"Құлсары": { 
+title: "Құлсары", 
+oldName: "Күлсары / Құлсары", 
+type: "Ойконим / Қала", 
+text: `<p><b>Қазіргі атауы:</b> Құлсары</p><p>Жылыой ауданының орталығы[cite: 41].</p>` 
+},
+"Қиғаш": { 
+title: "Қиғаш", 
+oldName: "Кигач", 
+type: "Гидроним", 
+text: `<p><b>Қазіргі атауы:</b> Қиғаш</p><p>Еділ өзенінің суы мол тармағы[cite: 41].</p>` 
+},
+"Қаракөл": { 
+title: "Қаракөл", 
+oldName: "Қаракөл", 
+type: "Гидроним", 
+text: `<p><b>Қазіргі атауы:</b> Қаракөл</p><p>Ойыл өзені сағасындағы тұщы көл.</p>` 
+},
+"Индер": { 
+title: "Индер", 
+oldName: "Дендер / Тұздыкөл", 
+type: "Ороним / Гидроним", 
+text: `<p><b>Қазіргі атауы:</b> Индер</p><p>Бірегей тұзды көл[cite: 41].</p>` 
+},
+"Жайық": { 
+title: "Жайық", 
+oldName: "Яик, Даикс, Урал", 
+type: "Гидроним", 
+text: `<p><b>Қазіргі атауы:</b> Жайық</p><p>Елдің негізгі су артериясы.</p>` 
+},
+"Ембі": { 
+title: "Ембі", 
+oldName: "Эмба / Ғем", 
+type: "Гидроним", 
+text: `<p><b>Қазіргі атауы:</b> Ембі</p><p>Тарихи өзен[cite: 41].</p>` 
+},
+"Доссор": { 
+title: "Доссор", 
+oldName: "Досғор / Доссор", 
+type: "Ойконим", 
+text: `<p><b>Қазіргі атауы:</b> Доссор</p><p>Мұнай өндірісінің қара шаңырағы.</p>` 
+},
+"Бақсай": { 
+title: "Бақсай", 
+oldName: "Баксай", 
+type: "Гидроним / Ойконим", 
+text: `<p><b>Қазіргі атауы:</b> Бақсай</p><p>Жайықтың оң жағалауындағы тарихи өзен[cite: 41].</p>` 
+},
+"Аралтөбе": { 
+title: "Аралтөбе", 
+oldName: "Аралтөбе", 
+type: "Ойконим", 
+text: `<p><b>Қазіргі атауы:</b> Аралтөбе</p><p>Сармат дәуірінің ескерткіші[cite: 41].</p>` 
+} 
+}; 
+
+/* ========================= МОДАЛЬДЫ АШУ ========================= */ 
+function showPlace(name) { 
+const place = places[name]; 
+if (!place) return; 
+document.getElementById("modalText").innerHTML = ` 
+<h2>${place.title}</h2> 
+<p> <b>Тарихи атауы:</b> ${place.oldName} </p> 
+<p> <b>Топоним түрі:</b> ${place.type} </p> 
+${place.text} 
+<hr style="margin:25px 0;"> 
+<p> 📱 <b>QR код арқылы бөлісуге дайын</b> </p> 
+`; 
+document.getElementById("modal").style.display = "flex"; 
+} 
+
+/* ========================= МОДАЛЬДЫ ЖАБУ ========================= */ 
+function closeModal() { 
+document.getElementById("modal").style.display = "none"; 
+} 
+
+/* ========================= ІЗДЕУ ========================= */ 
+function searchNames() { 
+const search = document.getElementById("search").value.toLowerCase(); 
+const cards = document.querySelectorAll(".card"); 
+cards.forEach(card => { 
+const name = card.dataset.name.toLowerCase(); 
+if (name.includes(search)) { 
+card.style.display = "block"; 
+} else { 
+card.style.display = "none"; 
+} 
+}); 
+} 
+
+/* ========================= AI ПРОТОТИП ========================= */ 
+function askAI() { 
+const question = document.getElementById("aiQuestion").value; 
+const answer = document.getElementById("aiAnswer"); 
+if (!question.trim()) { 
+answer.style.display = "block"; 
+answer.innerHTML = "Сұрағыңызды енгізіңіз."; 
+return; 
+} 
+answer.style.display = "block"; 
+const q = question.toLowerCase();
+if (q.includes("тайсойған") || q.includes("тайсойган")) {
+answer.innerHTML = ` 
+<b>🤖 ЖИ зерттеуші:</b><br><br> 
+Тайсойған — Қызылқоға ауданындағы ірі құмды алқап[cite: 44]. 1949 жылы КСРО әскери полигоны ретінде жалға беріліп[cite: 44], 2015 жылы ел игілігіне қайтарылған[cite: 44]. Атауы «тай сойылған» тарихи/аңыздық оқиғасына байланысты қойылған[cite: 44].
+`; 
+} else if (q.includes("сарайшық") || q.includes("сарайчик") || q.includes("кіші сарай")) { 
+answer.innerHTML = ` 
+<b>🤖 ЖИ зерттеуші:</b><br><br> 
+Сарайшық (Кіші Сарай) — XIII–XVI ғасырлардағы Алтын Орда, Ноғай Ордасы мен Қазақ хандығының ірі орталығы[cite: 41]. Бұл жерде 7 хан жерленген[cite: 41].
+`; 
+} else if (q.includes("сағыз") || q.includes("сагиз")) { 
+answer.innerHTML = ` 
+<b>🤖 ЖИ зерттеуші:</b><br><br> 
+Сағыз — Мұғалжар тауларынан басталатын өзен[cite: 41], тарихи теміржол бекеті[cite: 41].
+`; 
+} else if (q.includes("ойыл") || q.includes("көкжар") || q.includes("уил")) { 
+answer.innerHTML = ` 
+<b>🤖 ЖИ зерттеуші:</b><br><br> 
+Ойыл — Батыс Қазақстанның көне өзені[cite: 41], Көкжар жәрмеңкесі өткен жер[cite: 41].
+`; 
+} else { 
+answer.innerHTML = ` 
+<b>🤖 ЖИ зерттеуші:</b><br><br> 
+Бұл сұрақ бойынша деректер базасы іздестірілуде.
+`; 
+} 
+} 
+
+/* ========================= QUIZ (5 СҰРАҚ ЛОГИКАСЫ) ========================= */ 
+const quizData = [
+  {
+    question: "1949 жылы КСРО Қорғаныс министрлігіне әскери полигон ретінде жалға беріліп, 2015 жылы елге қайтарылған құмды алқап қайсысы?[cite: 44]",
+    options: ["A) Тайсойған құмы", "B) Нарын құмы", "C) Рын құмы", "D) Қарақұм"],
+    correct: 0,
+    explanation: "Тайсойған полигонының жерлері 2015 жылы елге қайтарылып, Қызылқоға шаруаларына жайылым ретінде берілді[cite: 44]."
+  },
+  {
+    question: "Алтын Орда, Ноғай Ордасы және Қазақ хандығының ірі орталығы болған, 7 хан жерленген тарихи шаһар?[cite: 41]",
+    options: ["A) Тараз", "B) Сарайшық", "C) Сығанақ", "D) Отырар"],
+    correct: 1,
+    explanation: "Сарайшық (Күшік-Сарай) — Атырау өңіріндегі ең ірі ортағасырлық тарихи қала және хандар пантеоны[cite: 41]."
+  },
+  {
+    question: "Мұғалжар бөктерінен басталып, Атырау облысының Қызылқоға ауданы арқылы өтетін тарихи өзен мен станция атауы?[cite: 41]",
+    options: ["A) Ембі", "B) Жайық", "C) Сағыз", "D) Қиғаш"],
+    correct: 2,
+    explanation: "Сағыз — Мұғалжар тауларынан бастау алатын өзен әрі тарихи теміржол бекеті[cite: 41]."
+  },
+  {
+    question: "Ұлы Жібек жолының тармағында орналасқан, бұрын өзінің атақты «Көкжар жәрмеңкесімен» танымал болған өзен атауы?[cite: 41]",
+    options: ["A) Ойыл", "B) Жайық", "C) Бақсай", "D) Жем"],
+    correct: 0,
+    explanation: "Ойыл бойындағы Көкжар жәрмеңкесі Батыс Қазақстанның ірі сауда орталықтарының бірі болған[cite: 41]."
+  },
+  {
+    question: "Жылыой ауданының орталығы саналатын, мұнайлы өңірдегі батыр есімімен аталған қала?[cite: 41]",
+    options: ["A) Доссор", "B) Мақат", "C) Құлсары", "D) Индер"],
+    correct: 2,
+    explanation: "Құлсары қаласы өңірдегі белгілі тұлға — Құлсары батырдың құрметіне аталған[cite: 41]."
+  }
+];
+
+let currentQuizIndex = 0;
+let score = 0;
+
+function loadQuiz() {
+  const current = quizData[currentQuizIndex];
+  document.getElementById("current-question").innerText = currentQuizIndex + 1;
+  document.getElementById("question-text").innerText = current.question;
+  
+  const optionsContainer = document.getElementById("options-container");
+  optionsContainer.innerHTML = "";
+  
+  current.options.forEach((optionText, index) => {
+    const button = document.createElement("button");
+    button.className = "option";
+    button.innerText = optionText;
+    button.onclick = () => selectAnswer(index);
+    optionsContainer.appendChild(button);
+  });
+  
+  document.getElementById("quiz-result").innerText = "";
+  document.getElementById("next-btn").style.display = "none";
 }
 
-function showSection(id, btn) {
-    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    btn.classList.add('active');
+function selectAnswer(selectedIndex) {
+  const current = quizData[currentQuizIndex];
+  const options = document.querySelectorAll("#options-container .option");
+  const result = document.getElementById("quiz-result");
+  
+  options.forEach(btn => btn.disabled = true);
+  
+  if (selectedIndex === current.correct) {
+    options[selectedIndex].style.background = "#d1fae5";
+    options[selectedIndex].style.borderColor = "#10b981";
+    result.style.color = "#047857";
+    result.innerHTML = `✅ Дұрыс жауап! ${current.explanation}`;
+    score += 10;
+  } else {
+    options[selectedIndex].style.background = "#fee2e2";
+    options[selectedIndex].style.borderColor = "#ef4444";
+    options[current.correct].style.background = "#d1fae5";
+    result.style.color = "#b91c1c";
+    result.innerHTML = `❌ Қате. Дұрысы: ${current.options[current.correct]}. <br><small>${current.explanation}</small>`;
+  }
+  
+  document.getElementById("next-btn").style.display = "inline-block";
 }
 
-function calculate() {
-    const shower = +document.getElementById('shower').value || 0;
-    const faucet = +document.getElementById('faucet').value || 0;
-    const washing = +document.getElementById('washing').value || 0;
-    const family = +document.getElementById('family').value || 1;
-
-    const showerL = shower * 12 * family * 30;
-    const faucetL = faucet * 9 * family * 30;
-    const washingL = washing * 4 * 50;
-    const total = Math.round(showerL + faucetL + washingL);
-    const saved = Math.round(total * .35);
-    const money = Math.round(saved / 1000 * 120);
-
-    document.getElementById('totalWater').textContent = total.toLocaleString() + ' л';
-    document.getElementById('savedWater').textContent = saved.toLocaleString() + ' л';
-    document.getElementById('savedMoney').textContent = money.toLocaleString() + ' ₸';
-    document.getElementById('calcResult').classList.remove('hidden');
-
-    let tips = [];
-    if (shower > 10) tips.push('🚿 Душ уақыты жоғары. 8–10 минутқа қысқартсаңыз, су шығыны азаяды.');
-    if (faucet > 10) tips.push('🚰 Кранды қажетсіз ашық қалдырмаңыз. Аэратор қолдану да көмектеседі.');
-    if (washing > 3) tips.push('🧺 Кір жуғыш машинаны толық жүктемемен қолдану тиімді.');
-    if (total > 12000) tips.push('⚠️ Жалпы шығын жоғары. AquaAI арқылы жеке үнемдеу жоспарын жасаңыз.');
-    if (!tips.length) tips.push('✅ Өте жақсы! Сіздің көрсеткіштеріңіз үнемді тұтынуға жақын.');
-    
-    document.getElementById('recommendations').innerHTML = '<h3>🤖 AquaAI автоматты талдауы</h3><ul>' + tips.map(x => '<li>' + x + '</li>').join('') + '</ul>';
-    document.getElementById('moneySave').textContent = money.toLocaleString() + ' ₸';
-    updateWhere();
+function nextQuestion() {
+  currentQuizIndex++;
+  if (currentQuizIndex < quizData.length) {
+    loadQuiz();
+  } else {
+    showFinalResult();
+  }
 }
 
-function aiAnswer(type) {
-    const responses = {
-        analysis: '📈 Талдау: негізгі шығын душ пен кранға байланысты. Күнделікті әдеттерді аздап өзгерту арқылы айлық тұтынуды шамамен 10–20% төмендетуге болады.',
-        saving: '💧 Ұсыныс: душ уақытын қысқарту, кранды босқа ашық қалдырмау және кір жуғыш машинаны толық жүктеу — ең тиімді алғашқы қадамдар.',
-        leak: '🚨 Бақылау: түнгі су шығыны жоғары болса, крандарды, бачокты және құбырларды тексеріңіз. Нақты анықтау үшін су есептегіш көрсеткішін уақыт бойынша салыстыру қажет.',
-        forecast: '🔮 Болжам: қазіргі деректер бойынша тұтыну төмендеу бағытында. Үнемдеу әдеттері сақталса, келесі айда шамамен 3 050 л деңгейіне түсуі мүмкін.'
-    };
-    document.getElementById('aiResponse').innerHTML = '<h3>💡 AquaAI</h3><p>' + responses[type] + '</p>';
+function showFinalResult() {
+  const container = document.getElementById("quiz-container");
+  container.innerHTML = `
+    <div style="text-align: center; padding: 20px;">
+      <h3 style="font-size: 26px; color: #0c806e; margin-bottom: 15px;">🎉 Викторина аяқталды!</h3>
+      <p style="font-size: 18px; margin-bottom: 10px;">Сіз <b>${quizData.length}</b> сұрақтың <b>${score / 10}</b> сұрағына дұрыс жауап бердіңіз.</p>
+      <p style="font-size: 20px; font-weight: bold; color: #18332f;">Жинаған ұпайыңыз: ${score} / ${quizData.length * 10}</p>
+      <button onclick="location.reload()" style="margin-top: 25px; background: #0c806e; color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold;">
+        🔄 Қайтадан өту
+      </button>
+    </div>
+  `;
 }
 
-function askAI() {
-    const q = document.getElementById('question').value.trim();
-    if (!q) return;
-    let answer = 'Сұрағыңызды түсіндім. AquaAI демо-нұсқасы су тұтыну, үнемдеу және болжам тақырыптарында кеңес береді.';
-    if (q.toLowerCase().includes('үнем') || q.toLowerCase().includes('литр')) answer = '💧 Егер су тұтынуды 10–15% қысқартсаңыз, айлық шығыннан едәуір көлемде су сақтауға болады. Нақты есеп үшін «Калькулятор» бөліміндегі деректерді енгізіңіз.';
-    if (q.toLowerCase().includes('ағып')) answer = '🚨 Ағып кетуді тексеру үшін барлық крандарды жауып, есептегіш көрсеткішінің өзгеруін бақылаңыз. Бұл демонстрациялық жүйеде нақты датчик жоқ.';
-    document.getElementById('aiResponse').innerHTML = '<h3>🤖 AquaAI жауабы</h3><p>' + answer + '</p>';
-    document.getElementById('question').value = '';
-}
-
-function updateWhere() {
-    const shower = +document.getElementById('shower').value || 15;
-    const faucet = +document.getElementById('faucet').value || 20;
-    const washing = +document.getElementById('washing').value || 5;
-    const a = shower * 12, b = faucet * 9, c = washing * 4 * 50 / 30, total = a + b + c + Math.max(1, (a + b + c) * .18);
-    const vals = [a, b, c, total * .18], ids = ['shower', 'faucet', 'washing', 'other'];
-    vals.forEach((v, i) => {
-        let pct = Math.round(v / total * 100);
-        document.getElementById(ids[i] + 'Pct').textContent = pct + '%';
-        document.getElementById(ids[i] + 'Bar').style.width = Math.max(3, pct) + '%';
-    });
-}
-
-function simulateShower(v) {
-    document.getElementById('showerValue').textContent = v;
-    const save = Math.max(0, (+v - 8)) * 12 * 30;
-    document.getElementById('showerSave').textContent = Math.round(save).toLocaleString() + ' л/ай';
-    updateSimulationTotal();
-}
-
-function simulateFaucet(v) {
-    document.getElementById('faucetValue').textContent = v;
-    const save = (+v) * 9 * 30;
-    document.getElementById('faucetSave').textContent = Math.round(save).toLocaleString() + ' л/ай';
-    updateSimulationTotal();
-}
-
-function updateSimulationTotal() {
-    const a = Math.max(0, (+document.getElementById('showerRange').value - 8)) * 12 * 30;
-    const b = (+document.getElementById('faucetRange').value) * 9 * 30;
-    const total = Math.round(a + b);
-    document.getElementById('simulationTotal').textContent = total.toLocaleString() + ' л/ай';
-    document.getElementById('yearSave').textContent = (total * 12).toLocaleString() + ' л';
-}
-
-function calculateSchool() {
-    const students = +document.getElementById('students').value || 0;
-    const per = +document.getElementById('perStudent').value || 0;
-    const month = students * per * 30, year = month * 12;
-    document.getElementById('schoolLiters').textContent = month.toLocaleString() + ' л';
-    document.getElementById('schoolYear').textContent = year.toLocaleString() + ' л';
-}
-
-updateWhere();
-</script>
-</body>
+// Бет жүктелгенде квизді іске қосу
+document.addEventListener("DOMContentLoaded", loadQuiz);
+</script> 
+</body> 
 </html>
